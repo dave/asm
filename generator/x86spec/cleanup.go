@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package main
+package x86spec
 
 import (
 	"fmt"
@@ -710,52 +710,52 @@ var fixup = map[[2]string][]fixer{
 	{"LSL r16, r/m16", "0F 03 /r"}: {fixAddTag("operand16")},
 }
 
-var extraInsts = []*instruction{
+var extraInsts = []*Instruction{
 	// Undocumented.
-	{syntax: "ICEBP", opcode: "F1", valid32: "V", valid64: "V"},
-	{syntax: "UD1", opcode: "0F B9", valid32: "V", valid64: "V"},
-	{syntax: "FFREEP ST(i)", opcode: "DF C0+i", valid32: "V", valid64: "V", action: "w"},
+	{Syntax: "ICEBP", Opcode: "F1", Valid32: "V", Valid64: "V"},
+	{Syntax: "UD1", Opcode: "0F B9", Valid32: "V", Valid64: "V"},
+	{Syntax: "FFREEP ST(i)", Opcode: "DF C0+i", Valid32: "V", Valid64: "V", Action: "w"},
 
 	// Where did these come from? They were in version 0.01 of the csv table.
-	{syntax: "MOVNTSD m64, xmm1", opcode: "F2 0F 2B /r", valid32: "V", valid64: "V", cpuid: "SSE", action: "w,r"},
-	{syntax: "MOVNTSS m32, xmm1", opcode: "F3 0F 2B /r", valid32: "V", valid64: "V", cpuid: "SSE", action: "w,r"},
+	{Syntax: "MOVNTSD m64, xmm1", Opcode: "F2 0F 2B /r", Valid32: "V", Valid64: "V", Cpuid: "SSE", Action: "w,r"},
+	{Syntax: "MOVNTSS m32, xmm1", Opcode: "F3 0F 2B /r", Valid32: "V", Valid64: "V", Cpuid: "SSE", Action: "w,r"},
 
 	// These express to the decoder that in 64-bit mode
 	// an operand prefix does not affect the size of the relative offset.
-	{syntax: "CALL rel32", opcode: "E8 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JMP rel32", opcode: "E9 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JA rel32", opcode: "0F 87 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JAE rel32", opcode: "0F 83 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JB rel32", opcode: "0F 82 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JBE rel32", opcode: "0F 86 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JE rel32", opcode: "0F 84 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JG rel32", opcode: "0F 8F cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JGE rel32", opcode: "0F 8D cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JL rel32", opcode: "0F 8C cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JLE rel32", opcode: "0F 8E cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JNE rel32", opcode: "0F 85 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JNO rel32", opcode: "0F 81 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JNP rel32", opcode: "0F 8B cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JNS rel32", opcode: "0F 89 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JO rel32", opcode: "0F 80 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JP rel32", opcode: "0F 8A cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
-	{syntax: "JS rel32", opcode: "0F 88 cd", valid32: "N.S.", valid64: "V", tags: []string{"operand16", "operand64"}, action: "r"},
+	{Syntax: "CALL rel32", Opcode: "E8 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JMP rel32", Opcode: "E9 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JA rel32", Opcode: "0F 87 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JAE rel32", Opcode: "0F 83 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JB rel32", Opcode: "0F 82 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JBE rel32", Opcode: "0F 86 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JE rel32", Opcode: "0F 84 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JG rel32", Opcode: "0F 8F cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JGE rel32", Opcode: "0F 8D cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JL rel32", Opcode: "0F 8C cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JLE rel32", Opcode: "0F 8E cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JNE rel32", Opcode: "0F 85 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JNO rel32", Opcode: "0F 81 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JNP rel32", Opcode: "0F 8B cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JNS rel32", Opcode: "0F 89 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JO rel32", Opcode: "0F 80 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JP rel32", Opcode: "0F 8A cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
+	{Syntax: "JS rel32", Opcode: "0F 88 cd", Valid32: "N.S.", Valid64: "V", Tags: []string{"operand16", "operand64"}, Action: "r"},
 
 	// Disassemblers recognize these, but they're not in the manual.
 	// Not sure if they really exist.
 
 	// The 16-16 and 32-32 forms don't really make sense since there's nothing to extend.
-	{syntax: "MOVSX r16, r/m16", opcode: "0F BF /r", valid32: "V", valid64: "V", tags: []string{"operand16"}, action: "w,r"},
-	{syntax: "MOVSXD r16, r/m32", opcode: "63 /r", valid32: "N.E.", valid64: "V", tags: []string{"operand16"}, action: "w,r"},
-	{syntax: "MOVSXD r32, r/m32", opcode: "63 /r", valid32: "N.E.", valid64: "V", tags: []string{"operand32"}, action: "w,r"},
-	{syntax: "MOVZX r16, r/m16", opcode: "0F B7 /r", valid32: "V", valid64: "V", tags: []string{"operand16"}, action: "w,r"},
+	{Syntax: "MOVSX r16, r/m16", Opcode: "0F BF /r", Valid32: "V", Valid64: "V", Tags: []string{"operand16"}, Action: "w,r"},
+	{Syntax: "MOVSXD r16, r/m32", Opcode: "63 /r", Valid32: "N.E.", Valid64: "V", Tags: []string{"operand16"}, Action: "w,r"},
+	{Syntax: "MOVSXD r32, r/m32", Opcode: "63 /r", Valid32: "N.E.", Valid64: "V", Tags: []string{"operand32"}, Action: "w,r"},
+	{Syntax: "MOVZX r16, r/m16", Opcode: "0F B7 /r", Valid32: "V", Valid64: "V", Tags: []string{"operand16"}, Action: "w,r"},
 
-	{syntax: "LAR r64, r/m16", opcode: "REX.W 0F 02 /r", valid32: "N.E.", valid64: "V", action: "w,r"},
-	{syntax: "SLDT r32/m16", opcode: "0F 00 /0", valid32: "V", valid64: "V", tags: []string{"operand32"}, action: "w"},
-	{syntax: "STR r32/m16", opcode: "0F 00 /1", valid32: "V", valid64: "V", tags: []string{"operand32"}, action: "w"},
-	{syntax: "STR r64/m16", opcode: "REX.W 0F 00 /1", valid32: "N.E.", valid64: "V", action: "w"},
+	{Syntax: "LAR r64, r/m16", Opcode: "REX.W 0F 02 /r", Valid32: "N.E.", Valid64: "V", Action: "w,r"},
+	{Syntax: "SLDT r32/m16", Opcode: "0F 00 /0", Valid32: "V", Valid64: "V", Tags: []string{"operand32"}, Action: "w"},
+	{Syntax: "STR r32/m16", Opcode: "0F 00 /1", Valid32: "V", Valid64: "V", Tags: []string{"operand32"}, Action: "w"},
+	{Syntax: "STR r64/m16", Opcode: "REX.W 0F 00 /1", Valid32: "N.E.", Valid64: "V", Action: "w"},
 
-	{syntax: "BSWAP r16op", opcode: "0F C8+rd", valid32: "V", valid64: "V", tags: []string{"operand16"}, action: "rw"},
+	{Syntax: "BSWAP r16op", Opcode: "0F C8+rd", Valid32: "V", Valid64: "V", Tags: []string{"operand16"}, Action: "rw"},
 
 	// Do these exist?
 	// I am not sure where they came from, and xed doesn't recognize them.
@@ -763,63 +763,63 @@ var extraInsts = []*instruction{
 	//{syntax: "MOV TR0-TR7, rmr64", opcode: "0F 26 /r", valid32: "N.E.", valid64: "V", tags: []string{"modrm_regonly"}, action: "w,r"},
 	//{syntax: "MOV rmr32, TR0-TR7", opcode: "0F 24 /r", valid32: "V", valid64: "N.E.", tags: []string{"modrm_regonly"}, action: "w,r"},
 	//{syntax: "MOV rmr64, TR0-TR7", opcode: "0F 24 /r", valid32: "N.E.", valid64: "V", tags: []string{"modrm_regonly"}, action: "w,r"},
-	{syntax: "MOV Sreg, r32/m16", opcode: "8E /r", valid32: "V", valid64: "V", tags: []string{"operand32"}, action: "w,r"},
-	{syntax: "MOV r/m32, Sreg", opcode: "8C /r", valid32: "V", valid64: "V", tags: []string{"operand32"}, action: "w,r"},
+	{Syntax: "MOV Sreg, r32/m16", Opcode: "8E /r", Valid32: "V", Valid64: "V", Tags: []string{"operand32"}, Action: "w,r"},
+	{Syntax: "MOV r/m32, Sreg", Opcode: "8C /r", Valid32: "V", Valid64: "V", Tags: []string{"operand32"}, Action: "w,r"},
 }
 
-type fixer func(*instruction)
+type fixer func(*Instruction)
 
 func fixAddTag(tag string) fixer {
-	return func(inst *instruction) {
+	return func(inst *Instruction) {
 		addTag(inst, tag)
 	}
 }
 
 func fixRemoveTag(tag string) fixer {
-	return func(inst *instruction) {
+	return func(inst *Instruction) {
 		removeTag(inst, tag)
 	}
 }
 
 func fixRename(op string) fixer {
-	return func(inst *instruction) {
-		_, args := splitSyntax(inst.syntax)
-		inst.syntax = joinSyntax(op, args)
+	return func(inst *Instruction) {
+		_, args := splitSyntax(inst.Syntax)
+		inst.Syntax = joinSyntax(op, args)
 	}
 }
 
 func fixArg(i int, arg string) fixer {
-	return func(inst *instruction) {
-		op, args := splitSyntax(inst.syntax)
+	return func(inst *Instruction) {
+		op, args := splitSyntax(inst.Syntax)
 		args[i] = arg
-		inst.syntax = joinSyntax(op, args)
+		inst.Syntax = joinSyntax(op, args)
 	}
 }
 
 func fixIfValid(valid32, valid64 string, fix fixer) fixer {
-	return func(inst *instruction) {
-		if inst.valid32 == valid32 && inst.valid64 == valid64 {
+	return func(inst *Instruction) {
+		if inst.Valid32 == valid32 && inst.Valid64 == valid64 {
 			fix(inst)
 		}
 	}
 }
 
 func fixValid(valid32, valid64 string) fixer {
-	return func(inst *instruction) {
-		inst.valid32 = valid32
-		inst.valid64 = valid64
+	return func(inst *Instruction) {
+		inst.Valid32 = valid32
+		inst.Valid64 = valid64
 	}
 }
 
 func fixOpcode(opcode string) fixer {
-	return func(inst *instruction) {
-		inst.opcode = opcode
+	return func(inst *Instruction) {
+		inst.Opcode = opcode
 	}
 }
 
-func cleanup(insts []*instruction) []*instruction {
+func cleanup(config Config, insts []*Instruction) []*Instruction {
 	var haveOp map[string]bool
-	if onlySomePages {
+	if config.onlySomePages() {
 		haveOp = map[string]bool{}
 	}
 
@@ -827,14 +827,14 @@ func cleanup(insts []*instruction) []*instruction {
 	sawJZ := map[string]bool{}
 	out := insts[:0]
 	for seq, inst := range insts {
-		inst.seq = seq
+		inst.Seq = seq
 
 		// There are two copies each of JZ rel16 and JZ rel32. Delete the second.
-		if strings.HasPrefix(inst.syntax, "JZ rel") {
-			if sawJZ[inst.syntax] {
+		if strings.HasPrefix(inst.Syntax, "JZ rel") {
+			if sawJZ[inst.Syntax] {
 				continue
 			}
-			sawJZ[inst.syntax] = true
+			sawJZ[inst.Syntax] = true
 		}
 		out = append(out, inst)
 
@@ -844,29 +844,29 @@ func cleanup(insts []*instruction) []*instruction {
 			" m128",
 		}
 		for _, s := range surprises {
-			if strings.HasSuffix(inst.syntax, s) && strings.HasSuffix(inst.opcode, s) {
-				inst.opcode = strings.TrimSuffix(inst.opcode, s)
+			if strings.HasSuffix(inst.Syntax, s) && strings.HasSuffix(inst.Opcode, s) {
+				inst.Opcode = strings.TrimSuffix(inst.Opcode, s)
 			}
 		}
 
-		op, args := splitSyntax(inst.syntax)
+		op, args := splitSyntax(inst.Syntax)
 		op = strings.TrimRight(op, "*")
-		inst.syntax = joinSyntax(op, args)
+		inst.Syntax = joinSyntax(op, args)
 
 		// Check argument names in syntax against encoding details.
-		if enc, ok := encodings[inst.syntax]; ok {
-			inst.args = enc
+		if enc, ok := encodings[inst.Syntax]; ok {
+			inst.Args = enc
 		}
-		if len(args) == len(inst.args)+1 && args[len(args)-1] == "imm8" {
+		if len(args) == len(inst.Args)+1 && args[len(args)-1] == "imm8" {
 			fixed := make([]string, len(args))
-			copy(fixed, inst.args)
+			copy(fixed, inst.Args)
 			fixed[len(args)-1] = "imm8"
-			inst.args = fixed
-		} else if len(args) == 0 && len(inst.args) == 1 && inst.args[0] == "NA" {
-			inst.args = []string{}
-		} else if len(args) != len(inst.args) {
-			fmt.Fprintf(os.Stderr, "p.%d: %s has %d args but %d encoding details:\n\t%s\n", inst.page, inst.syntax, len(args), len(inst.args), strings.Join(inst.args, "; "))
-			inst.syntax = joinSyntax(op, args)
+			inst.Args = fixed
+		} else if len(args) == 0 && len(inst.Args) == 1 && inst.Args[0] == "NA" {
+			inst.Args = []string{}
+		} else if len(args) != len(inst.Args) {
+			fmt.Fprintf(os.Stderr, "p.%d: %s has %d args but %d encoding details:\n\t%s\n", inst.Page, inst.Syntax, len(args), len(inst.Args), strings.Join(inst.Args, "; "))
+			inst.Syntax = joinSyntax(op, args)
 			continue
 		}
 
@@ -874,11 +874,11 @@ func cleanup(insts []*instruction) []*instruction {
 		for i, arg := range args {
 			arg = strings.TrimSpace(arg)
 			arg = strings.TrimRight(arg, "*")
-			if (arg == "reg" || strings.HasPrefix(arg, "reg/")) && containsAll(inst.desc, "upper bits", "r64", "zero") {
+			if (arg == "reg" || strings.HasPrefix(arg, "reg/")) && containsAll(inst.Desc, "upper bits", "r64", "zero") {
 				arg = "r32" + strings.TrimPrefix(arg, "reg")
 			}
 
-			enc := inst.args[i]
+			enc := inst.Args[i]
 			enc = strings.TrimSpace(enc)
 			switch {
 			case strings.HasSuffix(enc, " (r))"):
@@ -896,7 +896,7 @@ func cleanup(insts []*instruction) []*instruction {
 			case enc == "BaseReg (R): VSIB:base, VectorReg(R): VSIB:index":
 				enc = "vsib (r)"
 			}
-			inst.args[i] = enc
+			inst.Args[i] = enc
 
 			switch {
 			case strings.HasSuffix(enc, " (r)"):
@@ -913,7 +913,7 @@ func cleanup(insts []*instruction) []*instruction {
 			case i < len(opAction[op]):
 				action = append(action, opAction[op][i])
 			default:
-				fmt.Fprintf(os.Stderr, "p.%d: %s has encoding %s for %s but no r/w annotations\n", inst.page, inst.syntax, enc, arg)
+				fmt.Fprintf(os.Stderr, "p.%d: %s has encoding %s for %s but no r/w annotations\n", inst.Page, inst.Syntax, enc, arg)
 				action = append(action, "?")
 			}
 
@@ -939,7 +939,7 @@ func cleanup(insts []*instruction) []*instruction {
 				addTag(inst, "modrm_memonly")
 			}
 
-			if arg == "r64" && (inst.syntax == "MOV r64, CR8" || inst.syntax == "MOV CR8, r64") {
+			if arg == "r64" && (inst.Syntax == "MOV r64, CR8" || inst.Syntax == "MOV CR8, r64") {
 				arg = "rmr64"
 				addTag(inst, "modrm_regonly")
 			}
@@ -948,65 +948,65 @@ func cleanup(insts []*instruction) []*instruction {
 			}
 
 			if !encodeOK[[2]string{arg, enc}] {
-				fmt.Fprintf(os.Stderr, "p.%d: %s has invalid encoding %s for %s\n\t{%q, %q}: true,\n", inst.page, inst.syntax, enc, arg, arg, enc)
+				fmt.Fprintf(os.Stderr, "p.%d: %s has invalid encoding %s for %s\n\t{%q, %q}: true,\n", inst.Page, inst.Syntax, enc, arg, arg, enc)
 			}
 
 			args[i] = arg
 
 			// Intel SETcc and others are missing the /r.
 			// But CALL rel16 and CALL rel32 have a bad encoding table so ignore the ModRM there.
-			if strings.HasPrefix(enc, "ModRM") && !strings.Contains(inst.opcode, " /") && op != "CALL" {
-				inst.opcode += " /r"
+			if strings.HasPrefix(enc, "ModRM") && !strings.Contains(inst.Opcode, " /") && op != "CALL" {
+				inst.Opcode += " /r"
 			}
-			if strings.HasPrefix(enc, "ModRM:reg") && !strings.Contains(inst.opcode, "/r") {
+			if strings.HasPrefix(enc, "ModRM:reg") && !strings.Contains(inst.Opcode, "/r") {
 				// The opcode is taken up with something else. Bug in table.
-				fmt.Fprintf(os.Stderr, "p.%d: %s has invalid encoding %s: no reg field in %s\n", inst.page, inst.syntax, arg, inst.opcode)
+				fmt.Fprintf(os.Stderr, "p.%d: %s has invalid encoding %s: no reg field in %s\n", inst.Page, inst.Syntax, arg, inst.Opcode)
 			}
 			// XBEGIN is missing cw cd.
-			if enc == "Offset" && arg == "rel16" && !strings.Contains(inst.opcode, " cw") {
-				inst.opcode += " cw"
+			if enc == "Offset" && arg == "rel16" && !strings.Contains(inst.Opcode, " cw") {
+				inst.Opcode += " cw"
 			}
-			if enc == "Offset" && arg == "rel32" && !strings.Contains(inst.opcode, " cd") {
-				inst.opcode += " cd"
+			if enc == "Offset" && arg == "rel32" && !strings.Contains(inst.Opcode, " cd") {
+				inst.Opcode += " cd"
 			}
-			if enc == "Moffs" && !strings.Contains(inst.opcode, "cm") {
-				inst.opcode += " cm"
+			if enc == "Moffs" && !strings.Contains(inst.Opcode, "cm") {
+				inst.Opcode += " cm"
 			}
 
-			inst.action = strings.Join(action, ",")
+			inst.Action = strings.Join(action, ",")
 		}
 
-		inst.syntax = joinSyntax(op, args)
+		inst.Syntax = joinSyntax(op, args)
 
 		// The Intel manual lists each XCHG form with arguments in both orders.
 		// While this is technically correct, it confuses lots of the analysis.
 		// Change half of them to start with a fake "XX" byte.
 		if op == "XCHG" && !strings.HasPrefix(args[0], "r/") && !strings.HasSuffix(args[0], "op") {
-			inst.opcode = "XX " + inst.opcode
+			inst.Opcode = "XX " + inst.Opcode
 		}
 
 		// Intel manual is not great about disabling REX instructions on 32-bit systems.
-		if strings.Contains(inst.opcode, "REX") && inst.valid32 == "V" {
-			inst.valid32 = "N.E."
+		if strings.Contains(inst.Opcode, "REX") && inst.Valid32 == "V" {
+			inst.Valid32 = "N.E."
 		}
 
-		if inst.valid32 == "V" {
+		if inst.Valid32 == "V" {
 			switch {
-			case containsAll(inst.compat, "not supported", "earlier than the Intel486"):
-				inst.cpuid = "486"
-			case containsAll(inst.compat, "not supported", "earlier than the Pentium"),
-				containsAll(inst.compat, "were introduced", "with the Pentium"):
-				inst.cpuid = "Pentium"
-			case containsAll(inst.compat, "were introduced", "in the Pentium II"):
-				inst.cpuid = "PentiumII"
-			case containsAll(inst.compat, "were introduced", "in the P6 family"),
-				containsAll(inst.compat, "were introduced in P6 family"):
+			case containsAll(inst.Compat, "not supported", "earlier than the Intel486"):
+				inst.Cpuid = "486"
+			case containsAll(inst.Compat, "not supported", "earlier than the Pentium"),
+				containsAll(inst.Compat, "were introduced", "with the Pentium"):
+				inst.Cpuid = "Pentium"
+			case containsAll(inst.Compat, "were introduced", "in the Pentium II"):
+				inst.Cpuid = "PentiumII"
+			case containsAll(inst.Compat, "were introduced", "in the P6 family"),
+				containsAll(inst.Compat, "were introduced in P6 family"):
 				addTag(inst, "P6")
 			}
 		}
 
-		if onlySomePages {
-			op, _ := splitSyntax(inst.syntax)
+		if config.onlySomePages() {
+			op, _ := splitSyntax(inst.Syntax)
 			haveOp[op] = true
 		}
 	}
@@ -1015,11 +1015,11 @@ func cleanup(insts []*instruction) []*instruction {
 	sort.Sort(byOpcode(insts))
 
 	// Detect operand size dependencies.
-	var last *instruction
+	var last *Instruction
 	for _, inst := range insts {
 		if last != nil {
-			f1, _ := splitOpcode(last.opcode)
-			f2, _ := splitOpcode(inst.opcode)
+			f1, _ := splitOpcode(last.Opcode)
+			f2, _ := splitOpcode(inst.Opcode)
 			if f1 == f2 {
 				// Conflict: cannot distinguish instructions based on fixed prefix.
 				if is16vs32pair(last, inst) {
@@ -1039,47 +1039,47 @@ func cleanup(insts []*instruction) []*instruction {
 	}
 
 	// Detect pseudo-ops, defined as opcode entries subsumed by more general ones.
-	seen := map[string]*instruction{}
+	seen := map[string]*Instruction{}
 	for _, inst := range insts {
-		if strings.HasPrefix(inst.opcode, "9B ") { // FWAIT prefix
+		if strings.HasPrefix(inst.Opcode, "9B ") { // FWAIT prefix
 			addTag(inst, "pseudo")
 			continue
 		}
-		if inst.opcode == "F0" || inst.opcode == "F2" || inst.opcode == "F3" {
+		if inst.Opcode == "F0" || inst.Opcode == "F2" || inst.Opcode == "F3" {
 			addTag(inst, "pseudo")
 			continue
 		}
-		if strings.HasPrefix(inst.syntax, "REP ") || strings.HasPrefix(inst.syntax, "REPE ") || strings.HasPrefix(inst.syntax, "REPNE ") {
+		if strings.HasPrefix(inst.Syntax, "REP ") || strings.HasPrefix(inst.Syntax, "REPE ") || strings.HasPrefix(inst.Syntax, "REPNE ") {
 			addTag(inst, "pseudo")
 			continue
 		}
-		if strings.HasPrefix(inst.syntax, "SAL ") { // SHL is canonical
+		if strings.HasPrefix(inst.Syntax, "SAL ") { // SHL is canonical
 			addTag(inst, "pseudo")
 			continue
 		}
-		if old := seen[inst.opcode]; old != nil {
-			if condLess(old.syntax, inst.syntax) {
+		if old := seen[inst.Opcode]; old != nil {
+			if condLess(old.Syntax, inst.Syntax) {
 				addTag(inst, "pseudo")
 				continue
 			}
-			if xchgLess(inst.syntax, old.syntax) {
-				old.tags = append(old.tags, "pseudo")
-				seen[inst.opcode] = inst
+			if xchgLess(inst.Syntax, old.Syntax) {
+				old.Tags = append(old.Tags, "pseudo")
+				seen[inst.Opcode] = inst
 				continue
 			}
 		}
 
-		seen[inst.opcode] = inst
+		seen[inst.Opcode] = inst
 
-		if last != nil && canGenerate(last.opcode, inst.opcode) {
+		if last != nil && canGenerate(last.Opcode, inst.Opcode) {
 			addTag(inst, "pseudo")
 			continue
 		}
 		last = inst
 	}
 	for _, inst := range insts {
-		if strings.Contains(inst.opcode, "REX ") {
-			if old := seen[strings.Replace(inst.opcode, "REX ", "", 1)]; old != nil && old.syntax == inst.syntax {
+		if strings.Contains(inst.Opcode, "REX ") {
+			if old := seen[strings.Replace(inst.Opcode, "REX ", "", 1)]; old != nil && old.Syntax == inst.Syntax {
 				addTag(inst, "pseudo64")
 				continue
 			} else if old != nil && hasTag(old, "pseudo") {
@@ -1087,8 +1087,8 @@ func cleanup(insts []*instruction) []*instruction {
 				continue
 			}
 		}
-		if strings.Contains(inst.opcode, "REX.W ") {
-			if old := seen[strings.Replace(inst.opcode, "REX.W ", "", -1)]; old != nil && old.syntax == inst.syntax {
+		if strings.Contains(inst.Opcode, "REX.W ") {
+			if old := seen[strings.Replace(inst.Opcode, "REX.W ", "", -1)]; old != nil && old.Syntax == inst.Syntax {
 				addTag(old, "ignoreREXW")
 				addTag(inst, "pseudo")
 				continue
@@ -1107,8 +1107,8 @@ func cleanup(insts []*instruction) []*instruction {
 
 	// Undo XCHG hack above.
 	for _, inst := range insts {
-		if strings.HasPrefix(inst.opcode, "XX ") {
-			inst.opcode = strings.TrimPrefix(inst.opcode, "XX ")
+		if strings.HasPrefix(inst.Opcode, "XX ") {
+			inst.Opcode = strings.TrimPrefix(inst.Opcode, "XX ")
 			addTag(inst, "pseudo")
 			removeTag(inst, "pseudo64")
 		}
@@ -1117,17 +1117,17 @@ func cleanup(insts []*instruction) []*instruction {
 	// Last ditch effort. Manual fixes.
 	// Some things are too hard to infer.
 	for _, inst := range insts {
-		for _, fix := range fixup[[2]string{inst.syntax, inst.opcode}] {
+		for _, fix := range fixup[[2]string{inst.Syntax, inst.Opcode}] {
 			fix(inst)
 		}
-		sort.Strings(inst.tags)
+		sort.Strings(inst.Tags)
 	}
 
 	sort.Sort(bySeq(insts))
 
-	if onlySomePages {
+	if config.onlySomePages() {
 		for _, inst := range extraInsts {
-			op, _ := splitSyntax(inst.syntax)
+			op, _ := splitSyntax(inst.Syntax)
 			if haveOp[op] {
 				insts = append(insts, inst)
 			}
@@ -1138,8 +1138,8 @@ func cleanup(insts []*instruction) []*instruction {
 	return insts
 }
 
-func hasTag(inst *instruction, tag string) bool {
-	for _, t := range inst.tags {
+func hasTag(inst *Instruction, tag string) bool {
+	for _, t := range inst.Tags {
 		if t == tag {
 			return true
 		}
@@ -1147,62 +1147,62 @@ func hasTag(inst *instruction, tag string) bool {
 	return false
 }
 
-func removeTag(inst *instruction, tag string) {
+func removeTag(inst *Instruction, tag string) {
 	if !hasTag(inst, tag) {
 		return
 	}
-	out := inst.tags[:0]
-	for _, t := range inst.tags {
+	out := inst.Tags[:0]
+	for _, t := range inst.Tags {
 		if t != tag {
 			out = append(out, t)
 		}
 	}
-	inst.tags = out
+	inst.Tags = out
 }
 
-func addTag(inst *instruction, tag string) {
+func addTag(inst *Instruction, tag string) {
 	if !hasTag(inst, tag) {
-		inst.tags = append(inst.tags, tag)
+		inst.Tags = append(inst.Tags, tag)
 	}
 }
 
-type byOpcode []*instruction
+type byOpcode []*Instruction
 
 func (x byOpcode) Len() int      { return len(x) }
 func (x byOpcode) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
 func (x byOpcode) Less(i, j int) bool {
-	if x[i].opcode != x[j].opcode {
-		return opcodeLess(x[i].opcode, x[j].opcode)
+	if x[i].Opcode != x[j].Opcode {
+		return opcodeLess(x[i].Opcode, x[j].Opcode)
 	}
-	if condLess(x[i].syntax, x[j].syntax) {
+	if condLess(x[i].Syntax, x[j].Syntax) {
 		return true
 	}
-	if condLess(x[j].syntax, x[i].syntax) {
+	if condLess(x[j].Syntax, x[i].Syntax) {
 		return false
 	}
-	if x[i].syntax != x[j].syntax {
-		return x[i].syntax < x[j].syntax
+	if x[i].Syntax != x[j].Syntax {
+		return x[i].Syntax < x[j].Syntax
 	}
-	return x[i].seq < x[j].seq
+	return x[i].Seq < x[j].Seq
 }
 
-type bySeq []*instruction
+type bySeq []*Instruction
 
 func (x bySeq) Len() int      { return len(x) }
 func (x bySeq) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
 func (x bySeq) Less(i, j int) bool {
-	return x[i].seq < x[j].seq
+	return x[i].Seq < x[j].Seq
 }
 
-type bySyntax []*instruction
+type bySyntax []*Instruction
 
 func (x bySyntax) Len() int      { return len(x) }
 func (x bySyntax) Swap(i, j int) { x[i], x[j] = x[j], x[i] }
 func (x bySyntax) Less(i, j int) bool {
-	if x[i].syntax != x[j].syntax {
-		return x[i].syntax < x[j].syntax
+	if x[i].Syntax != x[j].Syntax {
+		return x[i].Syntax < x[j].Syntax
 	}
-	return x[i].opcode < x[j].opcode
+	return x[i].Opcode < x[j].Opcode
 }
 
 // condLess reports whether the conditional instruction syntax
@@ -1305,10 +1305,10 @@ func allHex(s string) bool {
 
 // is16vs32pair reports whether x and y are the 16- and 32-bit variants of the same instruction,
 // based on analysis of the mnemonic syntax.
-func is16vs32pair(x, y *instruction) bool {
-	return conv16.Replace(x.syntax) == y.syntax ||
-		strings.Replace(x.syntax, "r16, r/", "r32, r32/", -1) == y.syntax || // LSL etc
-		strings.Replace(x.syntax, "r16", "r32", 1) == y.syntax // MOVSXD, MOVSX, etc
+func is16vs32pair(x, y *Instruction) bool {
+	return conv16.Replace(x.Syntax) == y.Syntax ||
+		strings.Replace(x.Syntax, "r16, r/", "r32, r32/", -1) == y.Syntax || // LSL etc
+		strings.Replace(x.Syntax, "r16", "r32", 1) == y.Syntax // MOVSXD, MOVSX, etc
 }
 
 func containsAll(x string, targ ...string) bool {

@@ -4,14 +4,14 @@
 
 // Derive format specifications.
 
-package main
+package x86spec
 
 import (
 	"sort"
 	"strings"
 )
 
-func format(insts []*instruction) {
+func format(insts []*Instruction) {
 	// Determine opcodes that come in multiple sizes
 	// and could need disambiguating suffixes.
 	// Mark those with multisize=true.
@@ -25,17 +25,17 @@ func format(insts []*instruction) {
 			}
 			switch i {
 			case 0:
-				if inst.valid32 != "V" {
+				if inst.Valid32 != "V" {
 					continue
 				}
 			case 1:
-				if inst.valid64 != "V" {
+				if inst.Valid64 != "V" {
 					continue
 				}
 			}
-			unsized := stripSize.Replace(inst.syntax)
+			unsized := stripSize.Replace(inst.Syntax)
 			if seen[unsized] {
-				op, _ := splitSyntax(inst.syntax)
+				op, _ := splitSyntax(inst.Syntax)
 				needSize[op] = true
 			}
 			seen[unsized] = true
@@ -43,41 +43,41 @@ func format(insts []*instruction) {
 	}
 
 	for _, inst := range insts {
-		op, _ := splitSyntax(inst.syntax)
+		op, _ := splitSyntax(inst.Syntax)
 		if needSize[op] || forceNeedSize[op] {
-			inst.multisize = "Y"
+			inst.Multisize = "Y"
 		}
 	}
 
 	// Assign data sizes.
 	for _, inst := range insts {
-		if inst.multisize != "Y" {
+		if inst.Multisize != "Y" {
 			continue
 		}
-		op, args := splitSyntax(inst.syntax)
+		op, args := splitSyntax(inst.Syntax)
 	Args:
 		for i := startArg[op]; i < len(args); i++ {
 			switch args[i] {
 			case "AL", "r8", "r8op", "r/m8":
-				inst.datasize = 8
+				inst.Datasize = 8
 				break Args
 			case "AX", "r16", "r16op", "r/m16":
-				inst.datasize = 16
+				inst.Datasize = 16
 				break Args
 			case "EAX", "r32", "r32op", "r/m32", "rmr32", "m32fp", "m32int":
-				inst.datasize = 32
+				inst.Datasize = 32
 				break Args
 			case "RAX", "r64", "r64op", "r/m64", "rmr64", "m64fp", "m64int":
-				inst.datasize = 64
+				inst.Datasize = 64
 				break Args
 			case "m80fp":
-				inst.datasize = 80
+				inst.Datasize = 80
 				break Args
 			case "xmm2/m128":
-				inst.datasize = 128
+				inst.Datasize = 128
 				break Args
 			case "ymm2/m256":
-				inst.datasize = 256
+				inst.Datasize = 256
 				break Args
 			}
 		}
@@ -87,16 +87,16 @@ func format(insts []*instruction) {
 	// With a few exceptions, it's the Intel opcode plus an optional suffix,
 	// followed by the reversed argument list.
 	for _, inst := range insts {
-		op, args := splitSyntax(inst.syntax)
+		op, args := splitSyntax(inst.Syntax)
 		intelOp := op
 		op = strings.ToLower(op)
-		if custom, ok := gnuOpcode[inst.syntax]; ok {
+		if custom, ok := gnuOpcode[inst.Syntax]; ok {
 			op = custom
 		} else {
-			if inst.multisize == "Y" {
-				suffix := defaultSizeSuffix[inst.datasize]
+			if inst.Multisize == "Y" {
+				suffix := defaultSizeSuffix[inst.Datasize]
 				if custom, ok := gnuSizeSuffix[op]; ok {
-					suffix = custom[inst.datasize]
+					suffix = custom[inst.Datasize]
 				}
 				op += suffix
 			}
@@ -109,7 +109,7 @@ func format(insts []*instruction) {
 				args[i], args[j] = args[j], args[i]
 			}
 		}
-		inst.gnuSyntax = joinSyntax(op, args)
+		inst.GnuSyntax = joinSyntax(op, args)
 	}
 
 	// Determine Go syntax for instructions.
@@ -117,19 +117,19 @@ func format(insts []*instruction) {
 	// but upper case and not reversing the argument list for a few instructions,
 	// like comparisons.
 	for _, inst := range insts {
-		intelOp, args := splitSyntax(inst.syntax)
+		intelOp, args := splitSyntax(inst.Syntax)
 
 		// start with GNU op, because it has suffixes already
-		op, _ := splitSyntax(inst.gnuSyntax)
+		op, _ := splitSyntax(inst.GnuSyntax)
 		op = strings.ToUpper(op)
-		if custom, ok := goOpcode[inst.syntax]; ok {
+		if custom, ok := goOpcode[inst.Syntax]; ok {
 			op = custom
 		} else if custom, ok := goOpcode[intelOp]; ok {
 			op = custom
 		} else if custom, ok := goOpcode[op]; ok {
 			op = custom
 		} else if suffix, ok := goSizeSuffix[op]; ok {
-			op += suffix[inst.datasize]
+			op += suffix[inst.Datasize]
 		}
 
 		switch intelOp {
@@ -147,7 +147,7 @@ func format(insts []*instruction) {
 				args[i], args[j] = args[j], args[i]
 			}
 		}
-		inst.goSyntax = joinSyntax(op, args)
+		inst.GoSyntax = joinSyntax(op, args)
 	}
 }
 

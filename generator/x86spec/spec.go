@@ -194,11 +194,10 @@
 // of a simple byte-code program. This decoder is the core of the disassembler
 // in the x86asm package (https://golang.org/x/arch/x86/x86asm).
 //
-package main
+package x86spec
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"io"
 	"log"
@@ -212,77 +211,71 @@ const (
 	specFormatVersion = "0.2"
 )
 
-var (
-	flagDebugPage = flag.String("debugpage", "", "debug page `n` of the manual (can be comma-separated list)")
-	flagURL       = flag.String("u", "https://golang.org/s/x86manual", "use `url` for download if needed")
-	flagFile      = flag.String("f", "x86manual.pdf", "read manual from `file`, downloading if necessary")
-	flagCompat    = flag.Bool("compat", false, "print compatibility statements")
-
-	debugging     bool
-	onlySomePages bool
-)
-
-type instruction struct {
-	page      int
-	opcode    string
-	syntax    string
-	valid64   string
-	valid32   string
-	cpuid     string
-	desc      string
-	tags      []string
-	args      []string
-	seq       int // for use by cleanup
-	compat    string
-	action    string
-	multisize string
-	datasize  int
-	gnuSyntax string
-	goSyntax  string
+type Instruction struct {
+	Page      int
+	Opcode    string
+	Syntax    string
+	Valid64   string
+	Valid32   string
+	Cpuid     string
+	Desc      string
+	Tags      []string
+	Args      []string
+	Seq       int // for use by cleanup
+	Compat    string
+	Action    string
+	Multisize string
+	Datasize  int
+	GnuSyntax string
+	GoSyntax  string
 }
 
-func main() {
-	log.SetFlags(0)
-	log.SetPrefix("x86spec: ")
-	flags()
-	download()
-	insts := parse()
-	insts = cleanup(insts)
+type Config struct {
+	DebugPage string // debug page `n` of the manual (can be comma-separated list)
+	URL       string // use `url` for download if needed (default: https://golang.org/s/x86manual)
+	File      string // read manual from `file`, downloading if necessary (default: x86manual.pdf)
+	Compat    bool   // print compatibility statements
+}
+
+func (c Config) debugging() bool {
+	return c.DebugPage != ""
+}
+
+func (c Config) onlySomePages() bool {
+	return c.DebugPage != ""
+}
+
+func Load(config Config) []*Instruction {
+	if config.URL == "" {
+		config.URL = "https://golang.org/s/x86manual"
+	}
+	if config.File == "" {
+		config.File = "x86manual.pdf"
+	}
+	download(config)
+	insts := parse(config)
+	insts = cleanup(config, insts)
 	format(insts)
 	sort.Sort(bySyntax(insts))
-	write(os.Stdout, insts)
+	return insts
 }
 
-func flags() {
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "usage: x86spec [options]\n")
-		flag.PrintDefaults()
-		os.Exit(2)
-	}
-	flag.Parse()
-	if flag.NArg() != 0 {
-		flag.Usage()
-	}
-	debugging = *flagDebugPage != ""
-	onlySomePages = *flagDebugPage != ""
-}
-
-func download() {
-	_, err := os.Stat(*flagFile)
+func download(config Config) {
+	_, err := os.Stat(config.File)
 	if !os.IsNotExist(err) {
 		return
 	}
 
 	// Try downloading.
-	log.Printf("downloading manual to %s", *flagFile)
-	resp, err := http.Get(*flagURL)
+	log.Printf("downloading manual to %s", config.File)
+	resp, err := http.Get(config.URL)
 	if err != nil {
 		log.Fatal(err)
 	}
 	if resp.StatusCode != 200 {
 		log.Fatal(resp.Status)
 	}
-	f, err := os.Create(*flagFile)
+	f, err := os.Create(config.File)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -295,15 +288,15 @@ func download() {
 	}
 }
 
-func write(w io.Writer, insts []*instruction) {
+func write(w io.Writer, insts []*Instruction) {
 	bw := bufio.NewWriter(w)
 	defer bw.Flush()
 	for _, inst := range insts {
 		datasize := ""
-		if inst.datasize != 0 {
-			datasize = fmt.Sprint(inst.datasize)
+		if inst.Datasize != 0 {
+			datasize = fmt.Sprint(inst.Datasize)
 		}
-		writeCSV(bw, inst.syntax, inst.goSyntax, inst.gnuSyntax, inst.opcode, inst.valid32, inst.valid64, inst.cpuid, strings.Join(inst.tags, ","), inst.action, inst.multisize, datasize)
+		writeCSV(bw, inst.Syntax, inst.GoSyntax, inst.GnuSyntax, inst.Opcode, inst.Valid32, inst.Valid64, inst.Cpuid, strings.Join(inst.Tags, ","), inst.Action, inst.Multisize, datasize)
 	}
 }
 

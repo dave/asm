@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package main
+package x86spec
 
 import (
 	"bytes"
@@ -140,10 +140,10 @@ func pdfOpen(name string) (*pdf.Reader, error) {
 	return pdf.NewReader(newCachedReaderAt(f), fi.Size())
 }
 
-func parse() []*instruction {
-	var insts []*instruction
+func parse(config Config) []*Instruction {
+	var insts []*Instruction
 
-	f, err := pdfOpen(*flagFile)
+	f, err := pdfOpen(config.File)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -165,16 +165,16 @@ func parse() []*instruction {
 		if len(current.mtables) == 0 || len(current.mtables[0]) <= 1 {
 			fmt.Fprintf(os.Stderr, "p.%d: no mnemonics for instruction %q\n", current.pageNum, current.name)
 		}
-		processListing(current, &insts)
+		processListing(config, current, &insts)
 		current = nil
 	}
 
 	for pageNum := 1; pageNum <= n; pageNum++ {
-		if onlySomePages && !isDebugPage(pageNum) {
+		if config.onlySomePages() && !isDebugPage(config, pageNum) {
 			continue
 		}
 		p := f.Page(pageNum)
-		parsed := parsePage(p, pageNum)
+		parsed := parsePage(config, p, pageNum)
 		if parsed.name != "" {
 			finishInstruction()
 			for j, headline := range instList {
@@ -205,7 +205,7 @@ func parse() []*instruction {
 	}
 	finishInstruction()
 
-	if !onlySomePages {
+	if !config.onlySomePages() {
 		for _, headline := range instList {
 			if headline != "" {
 				fmt.Fprintf(os.Stderr, "missing instruction %q\n", headline)
@@ -219,8 +219,8 @@ func parse() []*instruction {
 // isDebugPage reports whether the -debugpage flag mentions page n.
 // The argument is a comma-separated list of pages.
 // Maybe some day it will support ranges.
-func isDebugPage(n int) bool {
-	s := *flagDebugPage
+func isDebugPage(config Config, n int) bool {
+	s := config.DebugPage
 	var k int
 	for i := 0; ; i++ {
 		if i == len(s) || s[i] == ',' {
@@ -297,8 +297,8 @@ func appendInstHeadings(outline pdf.Outline, list []string) []string {
 var dateRE = regexp.MustCompile(`\b(January|February|March|April|May|June|July|August|September|October|November|December) ((19|20)[0-9][0-9])\b`)
 
 // parsePage parses a single PDF page and returns the content it found.
-func parsePage(p pdf.Page, pageNum int) *listing {
-	if debugging {
+func parsePage(config Config, p pdf.Page, pageNum int) *listing {
+	if config.debugging() {
 		fmt.Fprintf(os.Stderr, "DEBUG: parsing page %d\n", pageNum)
 	}
 
@@ -340,7 +340,7 @@ func parsePage(p pdf.Page, pageNum int) *listing {
 		}
 	}
 
-	if debugging {
+	if config.debugging() {
 		for _, t := range text {
 			fmt.Println(t)
 		}
@@ -388,7 +388,7 @@ func parsePage(p pdf.Page, pageNum int) *listing {
 	}
 	text = text[1:]
 
-	enctable := findEncodingTable(text)
+	enctable := findEncodingTable(config, text)
 	if enctable != nil {
 		parsed.enctables = append(parsed.enctables, enctable)
 	}
@@ -399,7 +399,7 @@ func parsePage(p pdf.Page, pageNum int) *listing {
 	// Must be last, since it trims text.
 	// Next line is headline. Can wrap to multiple lines.
 	if len(text) == 0 || !match(text[0], "NeoSansIntelMedium", 12, "") || !isInstHeadline(text[0].S) {
-		if debugging {
+		if config.debugging() {
 			fmt.Fprintf(os.Stderr, "non-inst-headline: %v\n", text[0])
 		}
 	} else {
@@ -640,7 +640,7 @@ func halfMissing(x []string) bool {
 	return n >= len(x)/2
 }
 
-func findEncodingTable(text []pdf.Text) [][]string {
+func findEncodingTable(config Config, text []pdf.Text) [][]string {
 	// Look for operand encoding table.
 	sort.Sort(pdf.TextVertical(text))
 	var col []float64
@@ -662,7 +662,7 @@ func findEncodingTable(text []pdf.Text) [][]string {
 			continue
 		}
 		if match(t, "NeoSansIntel", 9, "Op/En") || match(t, "NeoSansIntel", 9, "Operand") {
-			if debugging {
+			if config.debugging() {
 				fmt.Printf("column %d at %.2f: %v\n", len(col), center(t), t)
 			}
 			col = append(col, center(t))
@@ -694,7 +694,7 @@ func findEncodingTable(text []pdf.Text) [][]string {
 		for i+1 < len(col) && col[i+1] <= x+nudge {
 			i++
 		}
-		if debugging {
+		if config.debugging() {
 			fmt.Printf("text at %.2f: %v => %d\n", x, t, i)
 		}
 		if line[i] != "" {
@@ -743,8 +743,8 @@ func findCompat(text []pdf.Text) string {
 	return out
 }
 
-func processListing(p *listing, insts *[]*instruction) {
-	if debugging {
+func processListing(config Config, p *listing, insts *[]*Instruction) {
+	if config.debugging() {
 		for _, table := range p.mtables {
 			fmt.Printf("table:\n")
 			for _, row := range table {
@@ -760,7 +760,7 @@ func processListing(p *listing, insts *[]*instruction) {
 		fmt.Printf("compat:\n%s", p.compat)
 	}
 
-	if *flagCompat && p.compat != "" {
+	if config.Compat && p.compat != "" {
 		fmt.Printf("# p.%d: %s\n#\t%s\n", p.pageNum, p.name, strings.Replace(p.compat, "\n", "\n#\t", -1))
 	}
 
@@ -785,9 +785,9 @@ func processListing(p *listing, insts *[]*instruction) {
 				row[3] = "V"
 				row[4] = "N.E."
 			}
-			inst := new(instruction)
-			inst.page = p.pageNum
-			inst.compat = strings.Join(strings.Fields(p.compat), " ")
+			inst := new(Instruction)
+			inst.Page = p.pageNum
+			inst.Compat = strings.Join(strings.Fields(p.compat), " ")
 			for i, hdr := range heading {
 				x := row[i]
 				x = strings.Replace(x, "\n", " ", -1)
@@ -814,24 +814,24 @@ func processListing(p *listing, insts *[]*instruction) {
 						goto BadTable
 					}
 					i := strings.Index(x, "\n")
-					inst.opcode = x[:i]
-					inst.syntax = strings.Replace(x[i+1:], "\n", " ", -1)
+					inst.Opcode = x[:i]
+					inst.Syntax = strings.Replace(x[i+1:], "\n", " ", -1)
 
 				case "Opcode":
-					inst.opcode = x
+					inst.Opcode = x
 
 				case "Instruction":
-					inst.syntax = x
+					inst.Syntax = x
 
 				case "Op/En":
-					inst.args = encs[x]
-					if inst.args == nil && len(encs) == 1 && encs["A"] != nil {
-						inst.args = encs["A"]
+					inst.Args = encs[x]
+					if inst.Args == nil && len(encs) == 1 && encs["A"] != nil {
+						inst.Args = encs["A"]
 					}
 					// In the December 2015 manual, PREFETCHW says
 					// encoding A but the table gives encoding M.
-					if inst.args == nil && inst.syntax == "PREFETCHW m8" && x == "A" && len(encs) == 1 && encs["M"] != nil {
-						inst.args = encs["M"]
+					if inst.Args == nil && inst.Syntax == "PREFETCHW m8" && x == "A" && len(encs) == 1 && encs["M"] != nil {
+						inst.Args = encs["M"]
 					}
 
 				case "64-Bit Mode":
@@ -840,7 +840,7 @@ func processListing(p *listing, insts *[]*instruction) {
 						wrong = "unexpected value for 64-Bit Mode column: " + x
 						goto BadTable
 					}
-					inst.valid64 = x
+					inst.Valid64 = x
 
 				case "Compat/Leg Mode":
 					x, ok := parseMode(x)
@@ -848,7 +848,7 @@ func processListing(p *listing, insts *[]*instruction) {
 						wrong = "unexpected value for Compat/Leg Mode column: " + x
 						goto BadTable
 					}
-					inst.valid32 = x
+					inst.Valid32 = x
 
 				case "64/32-Bit Mode":
 					i := strings.Index(x, "/")
@@ -862,26 +862,26 @@ func processListing(p *listing, insts *[]*instruction) {
 						wrong = "unexpected value for 64/32-Bit Mode column: " + x
 						goto BadTable
 					}
-					inst.valid64 = x1
-					inst.valid32 = x2
+					inst.Valid64 = x1
+					inst.Valid32 = x2
 
 				case "CPUID Feature Flag":
-					inst.cpuid = x
+					inst.Cpuid = x
 
 				case "Description":
-					if inst.desc != "" {
-						inst.desc += " "
+					if inst.Desc != "" {
+						inst.Desc += " "
 					}
-					inst.desc += x
+					inst.Desc += x
 				}
 			}
 
 			// Fixup various typos or bugs in opcode descriptions.
-			if inst.opcode == "VEX.128.66.0F.W0 6E /" {
-				inst.opcode += "r"
+			if inst.Opcode == "VEX.128.66.0F.W0 6E /" {
+				inst.Opcode += "r"
 			}
 			fix := func(old, new string) {
-				inst.opcode = strings.Replace(inst.opcode, old, new, -1)
+				inst.Opcode = strings.Replace(inst.Opcode, old, new, -1)
 			}
 			fix(" imm8", " ib")
 			fix("REX.w", "REX.W")
@@ -909,10 +909,10 @@ func processListing(p *listing, insts *[]*instruction) {
 			fix("VEX128", "VEX.128")
 			fix("0F3A.W0.1D", "0F3A.W0 1D")
 
-			inst.opcode = strings.Join(strings.Fields(inst.opcode), " ")
+			inst.Opcode = strings.Join(strings.Fields(inst.Opcode), " ")
 
 			fix = func(old, new string) {
-				inst.syntax = strings.Replace(inst.syntax, old, new, -1)
+				inst.Syntax = strings.Replace(inst.Syntax, old, new, -1)
 			}
 			fix("xmm1 xmm2", "xmm1, xmm2")
 			fix("r16/m16", "r/m16")
@@ -922,16 +922,16 @@ func processListing(p *listing, insts *[]*instruction) {
 			fix("\u2013", "-")
 			fix("mm3 /m", "mm3/m")
 			fix("mm3/.m", "mm3/m")
-			inst.syntax = joinSyntax(splitSyntax(inst.syntax))
+			inst.Syntax = joinSyntax(splitSyntax(inst.Syntax))
 
 			fix = func(old, new string) {
-				inst.cpuid = strings.Replace(inst.cpuid, old, new, -1)
+				inst.Cpuid = strings.Replace(inst.Cpuid, old, new, -1)
 			}
 			fix("PCLMUL- QDQ", "PCLMULQDQ")
 			fix("PCL- MULQDQ", "PCLMULQDQ")
 			fix("Both PCLMULQDQ and AVX flags", "PCLMULQDQ+AVX")
 
-			if !instBlacklist[inst.syntax] {
+			if !instBlacklist[inst.Syntax] {
 				*insts = append(*insts, inst)
 			}
 		}
