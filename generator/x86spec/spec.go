@@ -245,7 +245,7 @@ func (c Config) onlySomePages() bool {
 	return c.DebugPage != ""
 }
 
-func Load(config Config) []*Instruction {
+func Load(config *Config) []*Instruction {
 	if config.URL == "" {
 		config.URL = "https://golang.org/s/x86manual"
 	}
@@ -260,7 +260,7 @@ func Load(config Config) []*Instruction {
 	return insts
 }
 
-func download(config Config) {
+func download(config *Config) {
 	_, err := os.Stat(config.File)
 	if !os.IsNotExist(err) {
 		return

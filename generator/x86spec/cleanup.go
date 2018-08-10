@@ -817,7 +817,7 @@ func fixOpcode(opcode string) fixer {
 	}
 }
 
-func cleanup(config Config, insts []*Instruction) []*Instruction {
+func cleanup(config *Config, insts []*Instruction) []*Instruction {
 	var haveOp map[string]bool
 	if config.onlySomePages() {
 		haveOp = map[string]bool{}

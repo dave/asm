@@ -140,7 +140,7 @@ func pdfOpen(name string) (*pdf.Reader, error) {
 	return pdf.NewReader(newCachedReaderAt(f), fi.Size())
 }
 
-func parse(config Config) []*Instruction {
+func parse(config *Config) []*Instruction {
 	var insts []*Instruction
 
 	f, err := pdfOpen(config.File)
@@ -219,7 +219,7 @@ func parse(config Config) []*Instruction {
 // isDebugPage reports whether the -debugpage flag mentions page n.
 // The argument is a comma-separated list of pages.
 // Maybe some day it will support ranges.
-func isDebugPage(config Config, n int) bool {
+func isDebugPage(config *Config, n int) bool {
 	s := config.DebugPage
 	var k int
 	for i := 0; ; i++ {
@@ -297,7 +297,7 @@ func appendInstHeadings(outline pdf.Outline, list []string) []string {
 var dateRE = regexp.MustCompile(`\b(January|February|March|April|May|June|July|August|September|October|November|December) ((19|20)[0-9][0-9])\b`)
 
 // parsePage parses a single PDF page and returns the content it found.
-func parsePage(config Config, p pdf.Page, pageNum int) *listing {
+func parsePage(config *Config, p pdf.Page, pageNum int) *listing {
 	if config.debugging() {
 		fmt.Fprintf(os.Stderr, "DEBUG: parsing page %d\n", pageNum)
 	}
@@ -640,7 +640,7 @@ func halfMissing(x []string) bool {
 	return n >= len(x)/2
 }
 
-func findEncodingTable(config Config, text []pdf.Text) [][]string {
+func findEncodingTable(config *Config, text []pdf.Text) [][]string {
 	// Look for operand encoding table.
 	sort.Sort(pdf.TextVertical(text))
 	var col []float64
@@ -743,7 +743,7 @@ func findCompat(text []pdf.Text) string {
 	return out
 }
 
-func processListing(config Config, p *listing, insts *[]*Instruction) {
+func processListing(config *Config, p *listing, insts *[]*Instruction) {
 	if config.debugging() {
 		for _, table := range p.mtables {
 			fmt.Printf("table:\n")
