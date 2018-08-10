@@ -833,6 +833,7 @@ func processListing(config *Config, p *listing, insts *[]*Instruction) {
 					if inst.Args == nil && inst.Syntax == "PREFETCHW m8" && x == "A" && len(encs) == 1 && encs["M"] != nil {
 						inst.Args = encs["M"]
 					}
+					inst.OpEn = x
 
 				case "64-Bit Mode":
 					x, ok := parseMode(x)
@@ -930,6 +931,12 @@ func processListing(config *Config, p *listing, insts *[]*Instruction) {
 			fix("PCLMUL- QDQ", "PCLMULQDQ")
 			fix("PCL- MULQDQ", "PCLMULQDQ")
 			fix("Both PCLMULQDQ and AVX flags", "PCLMULQDQ+AVX")
+
+			inst.Name = inst.Syntax
+			if strings.Contains(inst.Name, " ") {
+				inst.Name = inst.Name[:strings.Index(inst.Name, " ")]
+			}
+			inst.Name = strings.Replace(inst.Name, "*", "", -1)
 
 			if !instBlacklist[inst.Syntax] {
 				*insts = append(*insts, inst)

@@ -228,6 +228,8 @@ type Instruction struct {
 	Datasize  int
 	GnuSyntax string
 	GoSyntax  string
+	OpEn      string
+	Name      string
 }
 
 type Config struct {

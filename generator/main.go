@@ -9,6 +9,10 @@ import (
 
 	"os"
 
+	"sort"
+
+	"reflect"
+
 	"github.com/dave/asm/generator/x86spec"
 	"github.com/dave/jennifer/jen"
 )
@@ -22,52 +26,134 @@ func main() {
 		os.Exit(1)
 	}
 }
+
+var argnames = map[string]string{
+	"":              "arg",
+	"1":             "v1",
+	"3":             "v3",
+	"<XMM0>":        "xmm",
+	"AL":            "al",
+	"AL/AX/EAX/RAX": "al",
+	"AX":            "ax",
+	"AX/EAX/RAX":    "ax",
+	"CL":            "cl",
+	"CS":            "cs",
+	"DS":            "ds",
+	"DX":            "dx",
+	"EAX":           "eax",
+	"ES":            "es",
+	"EVEX.vvvv":     "evex",
+	"FS":            "fs",
+	"GS":            "gs",
+	"ModRM:r/m":     "rm",
+	"ModRM:reg":     "reg",
+	"ModRM:reg (w) ModRM:r/m (r, ModRM:[7:6] must be 11b)": "reg",
+	"Moffs":  "moffs",
+	"Offset": "offset",
+	"RAX":    "rax",
+	"SS":     "ss",
+	"ST(0)":  "st0",
+	"ST(i)":  "sti",
+	"VEX.1vvv (r) ModRM:r/m (r, ModRM:[7:6] must be 11b)": "vex",
+	"VEX.vvvv":                 "vex",
+	"VectorReg(R): VSIB:index": "v",
+	"imm16":                    "imm",
+	"imm8":                     "imm",
+	"imm8/16/32":               "imm",
+	"imm8/16/32/64":            "imm",
+	"imm8[7:4]":                "imm",
+	"implicit XMM0":            "implicit",
+	"iw":                       "iw",
+	"opcode + rd":              "opcode",
+	"vsib":                     "vsib",
+	"vvvv":                     "vvvv",
+}
+
 func run() error {
 
 	config := &x86spec.Config{
-		DebugPage: "120,121,122,123,124,125,126,127,128,129,130",
+	//DebugPage: "214",
 	}
 	instructions := x86spec.Load(config)
 
-	//
+	allargs := map[string]map[string]bool{}
+
+	grouped := map[string]map[string][]*utils{} // name -> op/en -> instructions
+	for _, ins := range instructions {
+		if ins.Page == 0 {
+			continue
+		}
+		if ins.Name == "zmm3/m512," {
+			// TODO: That's this?
+			continue
+		}
+		if grouped[ins.Name] == nil {
+			grouped[ins.Name] = map[string][]*utils{}
+		}
+		op := strings.Replace(ins.OpEn, "-", "_", -1)
+		op = strings.Replace(op, " ", "_", -1)
+		grouped[ins.Name][op] = append(grouped[ins.Name][op], &utils{ins})
+		//fmt.Printf("*** %s %s %#v\n", ins.Name, ins.OpEn, ins)
+	}
+
+	fmt.Println("*** ALLARGS")
+	for _, v := range keys(allargs) {
+		fmt.Printf("\"%s\": \"\"\n", v)
+	}
+	fmt.Println("ALLARGS ***")
 
 	f := jen.NewFile("x86")
 	f.ImportName(UNSAFE_PACKAGE, "unsafe")
 
-	for _, ins := range instructions {
-		ins := utils{Instruction: ins}
-		fmt.Printf("%#v\n", ins.Instruction)
+	for _, name := range keys(grouped) {
+		byop := grouped[name]
+		for _, op := range keys(grouped[name]) {
+			instructions := grouped[name][op]
+			ins := instructions[0]
 
-		// Add the comment with function name and instruction description
-		f.Commentf("%s: %s", ins.function(), ins.Desc)
-
-		for i, p := range ins.params() {
-			f.Commentf("%s: %s", p, ins.Args[i])
-		}
-
-		f.Commentf("%s#page=%d", config.URL, ins.Page)
-
-		// Add the Go function
-		f.Func().Id(ins.function()).ParamsFunc(func(g *jen.Group) {
-			for i, p := range ins.params() {
-				g.Id(p).Do(func(s *jen.Statement) {
-					if i == len(ins.Args)-1 {
-						s.Interface() // all params are `interface{}`, so only add type to last item
-					}
-				})
+			fname := name
+			if len(byop) > 1 {
+				fname = name + "_" + op
 			}
-		}).Block(
-			jen.Qual(UNSAFE_PACKAGE, "Asm").CallFunc(func(g *jen.Group) {
-				g.Lit(ins.instruction())
-				if len(ins.Args) == 0 {
-					g.Nil()
-				} else {
-					for _, p := range ins.params() {
-						g.Id(p)
-					}
+
+			// Add the comment with function name and instruction description
+			f.Comment(fname)
+			for _, ins := range instructions {
+				f.Comment(ins.Desc)
+			}
+
+			//fmt.Printf("\n*** %s\n", fname)
+			//fmt.Printf("%#v\n", ins.Instruction)
+			//fmt.Println("params:", ins.params())
+			//fmt.Println("args:", ins.Args)
+			for i, p := range ins.params() {
+				f.Commentf("%s: %s", p, ins.Args[i])
+			}
+
+			f.Commentf("%s#page=%d", config.URL, ins.Page)
+
+			// Add the Go function
+			f.Func().Id(fname).ParamsFunc(func(g *jen.Group) {
+				for i, p := range ins.params() {
+					g.Id(p).Do(func(s *jen.Statement) {
+						if i == len(ins.Args)-1 {
+							s.Interface() // all params are `interface{}`, so only add type to last item
+						}
+					})
 				}
-			}),
-		)
+			}).Block(
+				jen.Qual(UNSAFE_PACKAGE, "Asm").CallFunc(func(g *jen.Group) {
+					g.Lit(ins.Name)
+					if len(ins.Args) == 0 {
+						g.Nil()
+					} else {
+						for _, p := range ins.params() {
+							g.Id(p)
+						}
+					}
+				}),
+			)
+		}
 	}
 	if err := f.Save("./x86/generated.go"); err != nil {
 		return err
@@ -93,14 +179,26 @@ func (u utils) instruction() string {
 }
 
 func (u utils) params() []string {
-	if !strings.Contains(u.Syntax, " ") {
-		return nil
-	}
-	argsString := u.Syntax[strings.Index(u.Syntax, " ")+1:] // remove the instruction from the start
-	argsString = strings.Replace(argsString, ",", "", -1)   // remove commas
+
 	var args []string
-	for _, raw := range strings.Fields(argsString) {
-		args = append(args, functionRegex.ReplaceAllString(raw, "_"))
+	for _, arg := range u.Args {
+		arg = strings.TrimSuffix(arg, " (r)")
+		arg = strings.TrimSuffix(arg, " (w)")
+		arg = strings.TrimSuffix(arg, " (r, w)")
+		if argnames[arg] == "" {
+			panic("unknown arg " + arg + " in " + u.Name)
+		}
+		args = append(args, argnames[arg])
 	}
+
 	return args
+}
+
+func keys(i interface{}) []string {
+	var keys []string
+	for _, v := range reflect.ValueOf(i).MapKeys() {
+		keys = append(keys, v.String())
+	}
+	sort.Strings(keys)
+	return keys
 }
