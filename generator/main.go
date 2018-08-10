@@ -118,19 +118,31 @@ func run() error {
 
 			// Add the comment with function name and instruction description
 			f.Comment(fname)
+			descriptions := map[string]bool{}
 			for _, ins := range instructions {
+				if descriptions[ins.Desc] {
+					continue
+				}
 				f.Comment(ins.Desc)
+				descriptions[ins.Desc] = true
 			}
-
-			//fmt.Printf("\n*** %s\n", fname)
-			//fmt.Printf("%#v\n", ins.Instruction)
-			//fmt.Println("params:", ins.params())
-			//fmt.Println("args:", ins.Args)
-			for i, p := range ins.params() {
-				f.Commentf("%s: %s", p, ins.Args[i])
+			/*
+				buf := &bytes.Buffer{}
+				w := tabwriter.NewWriter(buf, 1, 4, 1, ' ', 0)
+				for _, ins := range instructions {
+					fmt.Fprintf(w, "//\t%s\t%s\t%s\n", ins.Opcode, ins.Desc)
+				}
+				w.Flush()
+				f.Comment(buf.String())
+			*/
+			if len(ins.params()) > 0 {
+				f.Comment("")
+				for i, p := range ins.params() {
+					f.Commentf("%s: %s", p, ins.Args[i])
+				}
 			}
-
-			f.Commentf("%s#page=%d", config.URL, ins.Page)
+			f.Comment("")
+			f.Commentf("Documentation: %s#page=%d", config.URL, ins.Page)
 
 			// Add the Go function
 			f.Func().Id(fname).ParamsFunc(func(g *jen.Group) {
